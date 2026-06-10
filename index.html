@@ -74,24 +74,30 @@
   .dia-h{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--surface-2)}
   .dia-prefix{font-weight:700;color:var(--blue-3);white-space:nowrap}
   .dia-h .field{flex:1;font-weight:700}
-  .sec{padding:10px 12px;border-top:1px solid var(--line)}
+  .sec{padding:10px 12px;border-top:1px solid var(--line);transition:all .2s ease;border-radius:0}
   .sec-h{display:flex;gap:8px;align-items:center;margin-bottom:8px}
   .sec-h .field{flex:1}
   .item{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-bottom:8px}
   .item.superset{border-left:3px solid var(--blue)}
   .item-tag{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--blue-3);margin-bottom:6px;display:flex;gap:8px;align-items:center}
-  .exrow{display:grid;grid-template-columns:1fr 64px 1fr 24px;gap:7px;align-items:center;margin-bottom:6px}
+  .exrow{display:grid;grid-template-columns:1fr 64px 1fr 24px 24px;gap:7px;align-items:center;margin-bottom:2px}
   .exrow .nm{font-size:13px}
   .exrow .field{padding:7px 8px;font-size:13px}
+  .note-toggle{background:transparent;border:1px solid var(--line);color:var(--muted);width:24px;height:24px;border-radius:6px;font-size:13px;padding:0;display:flex;align-items:center;justify-content:center}
+  .note-toggle:hover{color:var(--blue-2);border-color:var(--blue-2)}
+  .note-toggle.has{color:var(--ok);border-color:var(--ok)}
+  .ex-note{margin-bottom:6px;margin-left:4px;max-height:0;overflow:hidden;opacity:0;transition:max-height .25s ease, opacity .2s ease}
+  .ex-note.show{max-height:60px;opacity:1;overflow:visible;margin-bottom:6px}
   .x{background:transparent;border:none;color:var(--muted);font-size:16px}
   .x:hover{color:var(--danger)}
   .item-foot{display:flex;gap:8px;align-items:center;margin-top:4px}
   .item-foot .rest{width:120px}
   .empty{color:var(--muted);font-size:13px;padding:8px;text-align:center;border:1px dashed var(--line);border-radius:9px}
-  .sec.active{box-shadow:inset 0 0 0 2px var(--blue)}
+  .sec.active{box-shadow:0 0 0 2px var(--blue), 0 4px 18px rgba(0,114,251,.18);border-radius:14px;margin:6px;padding:14px;transform:scale(1.008);position:relative;z-index:2;background:var(--surface)}
   .hiit-info{margin-top:8px}
 
-  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--surface-2);border:1px solid var(--line);padding:12px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;z-index:60}
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--surface-2);border:1px solid var(--line);padding:12px 18px;border-radius:12px;opacity:0;transition:opacity .3s cubic-bezier(.22,.61,.36,1), transform .3s cubic-bezier(.22,.61,.36,1);pointer-events:none;z-index:60}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   #toast.show{opacity:1}
   #toast.ok{border-color:var(--ok)} #toast.err{border-color:var(--danger)}
 
@@ -102,12 +108,17 @@
   .saved-list .it .nm{flex:1;font-size:13px}
   .alumno-head .ah-actions{margin-top:8px;display:flex;gap:8px}
 
-  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:50}
-  .modal{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;width:min(520px,92vw);max-height:90vh;overflow:auto}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;z-index:50;pointer-events:none;transition:background .25s ease}
+  .modal-bg.open{background:rgba(0,0,0,.55);pointer-events:auto}
+  .modal{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;width:min(520px,92vw);max-height:90vh;overflow:auto;transform:scale(.92) translateY(12px);opacity:0;transition:transform .3s cubic-bezier(.22,.61,.36,1), opacity .25s ease}
+  .modal-bg.open .modal{transform:scale(1) translateY(0);opacity:1}
   .name-preview{font-size:13px;color:var(--ok);margin-top:6px}
-  .combo-list{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;max-height:240px;overflow:auto;z-index:20;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .combo-list{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;max-height:0;overflow:hidden;z-index:20;scrollbar-width:thin;scrollbar-color:var(--line) transparent;opacity:0;transform:translateY(-6px);pointer-events:none;transition:max-height .3s cubic-bezier(.22,.61,.36,1), opacity .2s ease, transform .25s cubic-bezier(.22,.61,.36,1)}
+  .combo-list.open{max-height:260px;overflow:auto;opacity:1;transform:translateY(0);pointer-events:auto}
   .combo-list::-webkit-scrollbar{width:6px}
   .combo-list::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  .slide-panel{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;max-height:0;overflow:hidden;opacity:0;transition:max-height .3s cubic-bezier(.22,.61,.36,1), opacity .25s ease, margin .25s ease, padding .25s ease;margin-top:0;padding:0 12px}
+  .slide-panel.open{max-height:300px;overflow:visible;opacity:1;margin-top:10px;padding:12px}
   .combo-item{padding:9px 11px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--line)}
   .combo-item:last-child{border-bottom:none}
   .combo-item:hover{background:var(--surface)}
@@ -123,6 +134,7 @@
   <div class="sp"></div>
   <button class="btn ghost sm hidden" id="homeBtn">🏠 Inicio</button>
   <button class="btn ghost sm hidden" id="carpetasBtn">Carpetas / Planes</button>
+  <a class="btn ghost sm hidden" id="viewAppBtn" href="https://trainning-app-view-routines.vercel.app" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">App de Entrenamiento ↗</a>
   <button class="btn ghost sm hidden" id="manageExBtn">Gestionar ejercicios</button>
   <span class="pill" id="userPill"></span>
   <button class="btn ghost sm hidden" id="logoutBtn">Salir</button>
@@ -174,12 +186,10 @@
             <input class="field" id="alumnoInput" placeholder="Buscar o elegir alumno…" autocomplete="off" style="flex:1">
             <button class="btn ghost" id="rutinaPickerBtn" style="white-space:nowrap" disabled>Rutinas ▾</button>
           </div>
-          <div class="combo-list hidden" id="alumnoList"></div>
-          <div class="combo-list hidden" id="rutinaPickerList" style="right:0;left:auto;min-width:240px"></div>
+          <div class="combo-list" id="alumnoList"></div>
+          <div class="combo-list" id="rutinaPickerList" style="right:0;left:auto;min-width:240px"></div>
         </div>
-        <label style="margin-top:10px">Contraseña de esta rutina (única)</label>
-        <input class="field mono" id="rutinaPass" placeholder="clave-de-esta-rutina">
-        <div id="nuevoAlumnoBox" class="hidden" style="margin-top:10px;padding:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px">
+        <div id="nuevoAlumnoBox" class="slide-panel">
           <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px">
             <div><label>Nombre y apellido del alumno</label><input class="field" id="naNombre" placeholder="Juan Pérez"></div>
             <div><label>Carpeta / plan</label><select class="field" id="naCarpeta"></select></div>
@@ -188,7 +198,9 @@
         <label style="margin-top:10px">Nombre o apodo para el plan (opcional)</label>
         <input class="field" id="apodo" placeholder="si lo dejás vacío usa el nombre del alumno">
         <div class="name-preview" id="namePreview"></div>
-        <div id="rutinaNumInfo" class="hint" style="margin-top:4px"></div>
+        <label style="margin-top:10px">Contraseña de esta rutina (única)</label>
+        <input class="field mono" id="rutinaPass" placeholder="clave-de-esta-rutina">
+        <div id="rutinaNumInfo" style="margin-top:4px;font-size:13px;font-weight:600;color:var(--blue-2)"></div>
       </div>
 
       <div class="card">
@@ -271,6 +283,7 @@ async function startApp(email){
   document.getElementById('manageExBtn').classList.remove('hidden');
   document.getElementById('homeBtn').classList.remove('hidden');
   document.getElementById('carpetasBtn').classList.remove('hidden');
+  document.getElementById('viewAppBtn').classList.remove('hidden');
   document.getElementById('userPill').textContent=email||'conectado';
   fillCarpetas();
   await loadEjercicios();
@@ -329,8 +342,8 @@ document.getElementById('homeBtn').onclick=()=>{
   activeSec=null; combineTarget=null;
   aInput().value=''; document.getElementById('rutinaPass').value=''; document.getElementById('apodo').value='';
   document.getElementById('naNombre').value=''; document.getElementById('naCarpeta').value='';
-  document.getElementById('nuevoAlumnoBox').classList.add('hidden');
-  closeAlumnoList(); document.getElementById('rutinaPickerList').classList.add('hidden');
+  document.getElementById('nuevoAlumnoBox').classList.remove('open');
+  closeAlumnoList(); document.getElementById('rutinaPickerList').classList.remove('open');
   document.getElementById('search').value=''; document.getElementById('groupFilter').value='';
   plan={dias:[blankDia()]};
   document.getElementById('savedList').innerHTML='<p class="empty">Elegí un alumno para ver sus rutinas.</p>';
@@ -342,16 +355,13 @@ document.getElementById('homeBtn').onclick=()=>{
 /* ---------- botón Carpetas / Planes: explorador ---------- */
 document.getElementById('carpetasBtn').onclick=openCarpetasModal;
 async function openCarpetasModal(){
-  const host=document.getElementById('modalHost');
-  host.innerHTML=`<div class="modal-bg"><div class="modal" style="width:min(640px,94vw)">
+  openModal(`
     <h2 style="margin-top:0">Carpetas / Planes</h2>
     <input class="field" id="cpSearch" placeholder="Buscar alumno o rutina en todas las carpetas…" autocomplete="off">
     <div id="cpBody" style="margin-top:12px">Cargando…</div>
     <div class="row" style="margin-top:14px"><span class="sp" style="flex:1"></span><button class="btn ghost" id="cpClose">Cerrar</button></div>
-  </div></div>`;
-  const close=()=>host.innerHTML='';
-  document.getElementById('cpClose').onclick=close;
-  host.querySelector('.modal-bg').onclick=e=>{if(e.target.classList.contains('modal-bg'))close();};
+  `, {width:'min(640px,94vw)'});
+  document.getElementById('cpClose').onclick=closeModal;
 
   // traer TODAS las rutinas (con su alumno)
   const {data,error}=await sb.from('rutinas').select('*').order('creado_en',{ascending:true});
@@ -405,9 +415,9 @@ async function openCarpetasModal(){
   }
   function wire(scope){
     scope.querySelectorAll('[data-carpeta]').forEach(el=>el.onclick=()=>renderCarpeta(el.dataset.carpeta));
-    scope.querySelectorAll('[data-al]').forEach(el=>el.onclick=async()=>{close();await chooseAlumno(ALUMNOS.find(x=>x.id==el.dataset.al));});
+    scope.querySelectorAll('[data-al]').forEach(el=>el.onclick=async()=>{closeModal();await chooseAlumno(ALUMNOS.find(x=>x.id==el.dataset.al));});
     scope.querySelectorAll('[data-rt]').forEach(el=>el.onclick=async()=>{
-      close(); await chooseAlumno(ALUMNOS.find(x=>x.id==el.dataset.rtal));
+      closeModal(); await chooseAlumno(ALUMNOS.find(x=>x.id==el.dataset.rtal));
       const r=RUTS.find(x=>x.id==el.dataset.rt); if(r)loadRutinaForEdit(r);
     });
   }
@@ -418,12 +428,11 @@ async function openCarpetasModal(){
 function openExModal(ex){
   const isEdit=!!ex;
   const groupsOpts=Object.keys(GRUPOS_LABEL).map(g=>`<option value="${g}" ${ex&&ex.grupo===g?'selected':''}>${GRUPOS_LABEL[g]}</option>`).join('');
-  const host=document.getElementById('modalHost');
-  host.innerHTML=`<div class="modal-bg"><div class="modal">
+  openModal(`
     <h2 style="margin-top:0">${isEdit?'Editar ejercicio':'Nuevo ejercicio / video'}</h2>
     <label>Grupo muscular</label><select class="field" id="exGrupo">${groupsOpts}</select>
     <label>Nombre del ejercicio</label>
-    <input class="field" id="exNombre" value="${ex?escapeAttr(ex.nombre):''}" ${isEdit?'':''}>
+    <input class="field" id="exNombre" value="${ex?escapeAttr(ex.nombre):''}">
     <label>Link del video (Google Drive)</label>
     <input class="field mono" id="exVideo" value="${ex?escapeAttr(ex.video_url||''):''}" placeholder="https://drive.google.com/file/d/.../view">
     <label>Descripción (la que ve el alumno)</label>
@@ -433,18 +442,15 @@ function openExModal(ex){
       <span class="sp" style="flex:1"></span>
       <button class="btn" id="exSave">${isEdit?'Guardar cambios':'Crear ejercicio'}</button>
     </div>
-    <p class="hint" style="margin-bottom:0">Si actualizás un video en Drive y el link no cambia, no hace falta tocar nada. Si cambia el link, lo pegás acá.</p>
-  </div></div>`;
-  const close=()=>host.innerHTML='';
-  document.getElementById('exCancel').onclick=close;
-  host.querySelector('.modal-bg').onclick=e=>{if(e.target.classList.contains('modal-bg'))close();};
+    <p class="hint" style="margin-bottom:0">Si actualizás un video en Drive y el link no cambia, no hace falta tocar nada. Si cambia el link, lo pegás acá.</p>`);
+  document.getElementById('exCancel').onclick=closeModal;
   document.getElementById('exSave').onclick=async()=>{
     const rec={grupo:val('exGrupo'),nombre:val('exNombre').trim(),
       video_url:val('exVideo').trim()||null, descripcion:val('exDesc').trim()||null};
     if(!rec.nombre){toast('Falta el nombre.','err');return;}
     const {error}=await sb.from('ejercicios').upsert(rec,{onConflict:'nombre'});
     if(error){toast('Error: '+error.message,'err');return;}
-    toast('Ejercicio guardado ✓','ok'); close(); await loadEjercicios();
+    toast('Ejercicio guardado ✓','ok'); closeModal(); await loadEjercicios();
   };
 }
 
@@ -457,7 +463,7 @@ async function loadAlumnos(){
   const {data,error}=await sb.from('alumnos').select('*').order('nombre');
   if(error){toast('Error cargando alumnos: '+error.message,'err');return;}
   ALUMNOS=data||[];
-  if(aList()&&!aList().classList.contains('hidden')) renderAlumnoList();
+  if(aList()&&aList().classList.contains('open')) renderAlumnoList();
 }
 function renderAlumnoList(){
   const q=norm(aInput().value);
@@ -468,8 +474,8 @@ function renderAlumnoList(){
   aList().querySelectorAll('[data-id]').forEach(el=>el.onclick=()=>chooseAlumno(ALUMNOS.find(x=>x.id==el.dataset.id)));
   aList().querySelector('[data-new]').onclick=()=>chooseAlumno('__new__');
 }
-function openAlumnoList(){renderAlumnoList();aList().classList.remove('hidden');}
-function closeAlumnoList(){aList()&&aList().classList.add('hidden');}
+function openAlumnoList(){renderAlumnoList();aList().classList.add('open');}
+function closeAlumnoList(){aList()&&aList().classList.remove('open');}
 
 async function chooseAlumno(v){
   selAlumno=v; editId=null;
@@ -477,12 +483,12 @@ async function chooseAlumno(v){
   closeAlumnoList();
   if(v==='__new__'){
     aInput().value='';
-    document.getElementById('nuevoAlumnoBox').classList.remove('hidden');
+    document.getElementById('nuevoAlumnoBox').classList.add('open');
     document.getElementById('naNombre').value='';document.getElementById('naCarpeta').value='';
     document.getElementById('savedList').innerHTML='<p class="empty">Completá los datos del alumno nuevo abajo.</p>';
     RUTINAS_ALUMNO=[]; CURRENT_ALUMNO_ID=null; updateNamePreview(); updateRutinaPicker(); return;
   }
-  document.getElementById('nuevoAlumnoBox').classList.add('hidden');
+  document.getElementById('nuevoAlumnoBox').classList.remove('open');
   if(v){ aInput().value=v.nombre; updateNamePreview(); await loadSavedRutinas(v.id); }
   else { aInput().value=''; document.getElementById('savedList').innerHTML='<p class="empty">Elegí un alumno para ver sus rutinas.</p>'; RUTINAS_ALUMNO=[]; CURRENT_ALUMNO_ID=null; updateNamePreview(); updateRutinaPicker(); }
 }
@@ -558,15 +564,15 @@ function updateRutinaPicker(){
 document.getElementById('rutinaPickerBtn').onclick=(e)=>{
   e.stopPropagation();
   const list=document.getElementById('rutinaPickerList');
-  if(!list.classList.contains('hidden')){list.classList.add('hidden');return;}
+  if(list.classList.contains('open')){list.classList.remove('open');return;}
   let html=RUTINAS_ALUMNO.map((r,i)=>`<div class="combo-item" data-pick="${r.id}">N°${i+1} · ${escapeHtml(r.nombre)}</div>`).join('');
   html+='<div class="combo-item combo-new" data-picknew="1">➕ Crear rutina nueva…</div>';
   list.innerHTML=html||'<div class="combo-item">Sin rutinas</div>';
-  list.querySelectorAll('[data-pick]').forEach(el=>el.onclick=()=>{list.classList.add('hidden');loadRutinaForEdit(RUTINAS_ALUMNO.find(r=>r.id==el.dataset.pick));});
-  const nw=list.querySelector('[data-picknew]'); if(nw)nw.onclick=()=>{list.classList.add('hidden');newRutina();toast('Nueva rutina para este alumno.','ok');};
-  list.classList.remove('hidden');
+  list.querySelectorAll('[data-pick]').forEach(el=>el.onclick=()=>{list.classList.remove('open');loadRutinaForEdit(RUTINAS_ALUMNO.find(r=>r.id==el.dataset.pick));});
+  const nw=list.querySelector('[data-picknew]'); if(nw)nw.onclick=()=>{list.classList.remove('open');newRutina();toast('Nueva rutina para este alumno.','ok');};
+  list.classList.add('open');
 };
-document.addEventListener('click',(e)=>{ if(!e.target.closest('#rutinaPickerBtn')&&!e.target.closest('#rutinaPickerList')) document.getElementById('rutinaPickerList').classList.add('hidden'); });
+document.addEventListener('click',(e)=>{ if(!e.target.closest('#rutinaPickerBtn')&&!e.target.closest('#rutinaPickerList')) document.getElementById('rutinaPickerList').classList.remove('open'); });
 
 function updateRutinaNum(){
   const el=document.getElementById('rutinaNumInfo');
@@ -603,24 +609,20 @@ function duplicarRutina(r){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 async function openAlumnoEdit(a){
-  const host=document.getElementById('modalHost');
   const opts=CARPETAS.map(c=>`<option value="${escapeAttr(c)}" ${a.carpeta===c?'selected':''}>${escapeHtml(c)}</option>`).join('');
-  host.innerHTML=`<div class="modal-bg"><div class="modal">
+  openModal(`
     <h2 style="margin-top:0">Editar alumno</h2>
     <label>Nombre y apellido</label><input class="field" id="eaNombre" value="${escapeAttr(a.nombre)}">
     <label>Carpeta / plan</label><select class="field" id="eaCarpeta"><option value="">— Elegí carpeta —</option>${opts}</select>
     <div class="row" style="margin-top:14px"><button class="btn ghost" id="eaCancel">Cancelar</button>
-      <span class="sp" style="flex:1"></span><button class="btn" id="eaSave">Guardar cambios</button></div>
-  </div></div>`;
-  const close=()=>host.innerHTML='';
-  document.getElementById('eaCancel').onclick=close;
-  host.querySelector('.modal-bg').onclick=e=>{if(e.target.classList.contains('modal-bg'))close();};
+      <span class="sp" style="flex:1"></span><button class="btn" id="eaSave">Guardar cambios</button></div>`);
+  document.getElementById('eaCancel').onclick=closeModal;
   document.getElementById('eaSave').onclick=async()=>{
     const upd={nombre:val('eaNombre').trim(),carpeta:val('eaCarpeta')||null};
     if(!upd.nombre){toast('Falta el nombre.','err');return;}
     const {error}=await sb.from('alumnos').update(upd).eq('id',a.id);
     if(error){toast('Error: '+error.message,'err');return;}
-    toast('Alumno actualizado ✓','ok'); close();
+    toast('Alumno actualizado ✓','ok'); closeModal();
     await loadAlumnos();
     selAlumno=ALUMNOS.find(x=>x.id==a.id)||selAlumno;
     if(selAlumno&&selAlumno.nombre) aInput().value=selAlumno.nombre;
@@ -711,8 +713,10 @@ function renderDias(){
             <span class="nm">${escapeHtml(ex.nombre)}</span>
             <input class="field" placeholder="series" value="${escapeAttr(ex.series||'')}" data-f="series" data-xi="${xi}">
             <input class="field" placeholder="reps (ej: 12 10 8)" value="${escapeAttr(ex.reps||'')}" data-f="reps" data-xi="${xi}">
+            <button class="note-toggle${ex.nota?' has':''}" data-notetoggle="${xi}" title="Agregar nota">+</button>
             <button class="x" data-rmex="${xi}" title="Quitar">✕</button>
-          </div>`;
+          </div>
+          <div class="ex-note ${ex.nota?'show':''}" data-notebox="${xi}"><input class="field" placeholder="Nota breve para el alumno…" value="${escapeAttr(ex.nota||'')}" data-f="nota" data-xi="${xi}" style="font-size:12px"></div>`;
         });
         const tag=item.tipo==='superset'?'🔗 Superset ('+item.ejercicios.length+' ejercicios)':'Ejercicio';
         it.innerHTML=`<div class="item-tag">${tag}
@@ -723,6 +727,13 @@ function renderDias(){
             <span class="sp" style="flex:1"></span>
             <button class="x" data-rmitem title="Quitar bloque">🗑</button></div>`;
         it.querySelectorAll('[data-f]').forEach(inp=>inp.oninput=e=>{item.ejercicios[+inp.dataset.xi][inp.dataset.f]=e.target.value;});
+        it.querySelectorAll('[data-notetoggle]').forEach(b=>{
+          b.onclick=()=>{
+            const xi=+b.dataset.notetoggle, box=it.querySelector(`[data-notebox="${xi}"]`);
+            if(!box.classList.contains('show')){box.classList.add('show');box.querySelector('input').focus();}
+            else{box.classList.remove('show');item.ejercicios[xi].nota='';b.classList.remove('has');}
+          };
+        });
         it.querySelectorAll('[data-rmex]').forEach(b=>b.onclick=()=>{
           item.ejercicios.splice(+b.dataset.rmex,1);
           if(item.ejercicios.length<=1)item.tipo='simple';
@@ -760,12 +771,12 @@ function addExerciseToActive(nombre){
   if(combineTarget){
     const sec=plan.dias[combineTarget.di].secciones[combineTarget.si];
     const item=sec.items[combineTarget.ii];
-    item.tipo='superset'; item.ejercicios.push({nombre,series:'',reps:''});
+    item.tipo='superset'; item.ejercicios.push({nombre,series:'',reps:'',nota:''});
     renderDias(); return;
   }
   if(!activeSec){toast('Primero marcá una sección como activa.','err');return;}
   const sec=plan.dias[activeSec.di].secciones[activeSec.si];
-  sec.items.push({tipo:'simple',ejercicios:[{nombre,series:'',reps:''}],descanso:''});
+  sec.items.push({tipo:'simple',ejercicios:[{nombre,series:'',reps:'',nota:''}],descanso:''});
   renderDias();
 }
 
@@ -783,7 +794,7 @@ async function saveRutina(){
     if(error){toast('Error creando alumno: '+error.message,'err');return;}
     alumnoId=data.id; await loadAlumnos();
     selAlumno=data; aInput().value=data.nombre;
-    document.getElementById('nuevoAlumnoBox').classList.add('hidden');
+    document.getElementById('nuevoAlumnoBox').classList.remove('open');
     document.getElementById('naNombre').value='';document.getElementById('naCarpeta').value='';
   }
   if(!alumnoId){toast('Elegí o creá un alumno.','err');return;}
@@ -825,6 +836,27 @@ document.getElementById('previewBtn')&&(document.getElementById('previewBtn').on
 function val(id){const el=document.getElementById(id);return el?el.value:'';}
 function norm(s){return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
 function escapeHtml(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+/* ---- fluid modal system ---- */
+function openModal(innerHtml, opts){
+  const host=document.getElementById('modalHost');
+  const w = (opts&&opts.width)?opts.width:'min(520px,92vw)';
+  host.innerHTML=`<div class="modal-bg"><div class="modal" style="width:${w}">${innerHtml}</div></div>`;
+  const bg=host.querySelector('.modal-bg');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>bg.classList.add('open')));
+  bg.onclick=e=>{if(e.target===bg) closeModal();};
+  return host;
+}
+function closeModal(){
+  const host=document.getElementById('modalHost');
+  const bg=host.querySelector('.modal-bg');
+  if(!bg){host.innerHTML='';return;}
+  bg.classList.remove('open');
+  bg.addEventListener('transitionend',function handler(e){
+    if(e.target===bg||e.target.classList.contains('modal')){bg.removeEventListener('transitionend',handler);host.innerHTML='';}
+  });
+  setTimeout(()=>host.innerHTML='',400); // fallback
+}
 function escapeAttr(s){return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 </script>
 </body>
