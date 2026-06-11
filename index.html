@@ -40,16 +40,18 @@
   /* catalog drawer (mobile) */
   .cat-drawer-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0);z-index:40;transition:background .25s ease}
   .cat-drawer-bg.open{display:block;background:rgba(0,0,0,.5)}
-  .cat-drawer{position:fixed;bottom:0;left:0;right:0;z-index:41;background:var(--surface);border-top:1px solid var(--line);border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .35s cubic-bezier(.22,.61,.36,1);max-height:50vh;display:flex;flex-direction:column}
+  .cat-drawer{position:fixed;bottom:0;left:0;right:0;z-index:41;background:var(--surface);border-top:1px solid var(--line);border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .35s cubic-bezier(.22,.61,.36,1);max-height:38vh;display:flex;flex-direction:column}
   .cat-drawer.open{transform:translateY(0)}
-  .cat-drawer-handle{text-align:center;padding:6px}
-  .cat-drawer-handle span{display:inline-block;width:32px;height:3px;background:var(--line);border-radius:999px}
-  .cat-drawer-head{display:flex;align-items:center;gap:8px;padding:0 12px 6px}
-  .cat-drawer-head h3{flex:1;font-size:13px;font-weight:700}
+  .cat-drawer-handle{text-align:center;padding:4px}
+  .cat-drawer-handle span{display:inline-block;width:28px;height:3px;background:var(--line);border-radius:999px}
+  .cat-drawer-head{display:flex;align-items:center;gap:6px;padding:0 12px 4px}
+  .cat-drawer-head h3{flex:1;font-size:12px;font-weight:700}
   .cat-drawer-head .close{background:transparent;border:none;color:var(--muted);font-size:16px}
-  .cat-drawer .filters{padding:0 12px;margin-bottom:6px;display:flex;gap:6px}
-  .cat-drawer .filters .field{font-size:16px;padding:8px 10px}
-  .cat-drawer .cat-list{flex:1;overflow:auto;padding:0 12px 12px}
+  .cat-drawer .filters{padding:0 12px;margin-bottom:4px;display:flex;gap:6px}
+  .cat-drawer .filters .field{font-size:16px;padding:6px 8px;border-radius:8px}
+  .cat-drawer .cat-list{flex:1;overflow:auto;padding:0 12px 8px}
+  .cat-drawer .ex{padding:5px 6px;gap:6px}
+  .cat-drawer .ex .nm{font-size:12px}
 
   @media(max-width:900px){
     input.field,select.field,textarea.field{font-size:16px}
