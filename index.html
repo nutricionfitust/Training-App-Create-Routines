@@ -920,14 +920,16 @@ function renderDias(){
       renderDias();
     };
     d.querySelector('.dia-h .field').oninput=e=>dia.musculo=e.target.value;
-    d.querySelector('[data-addsec]').onclick=()=>{
+    d.querySelector('[data-addsec]').onclick=(e)=>{
+      e.stopPropagation();
       const usados=dia.secciones.map(s=>s.nombre);
       const libre=SECCIONES.find(s=>!usados.includes(s))||SECCIONES[0];
       dia.secciones.push(blankSec(libre));
       openDayIdx=di;
       renderDias();
     };
-    d.querySelector('[data-deldia]').onclick=()=>{
+    d.querySelector('[data-deldia]').onclick=(e)=>{
+      e.stopPropagation();
       plan.dias.splice(di,1);activeSec=null;combineTarget=null;
       if(openDayIdx===di)openDayIdx=null;
       else if(openDayIdx!==null&&openDayIdx>di)openDayIdx--;
