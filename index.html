@@ -128,14 +128,28 @@
   #vidPopover .vp-close:hover{color:var(--danger)}
   #vidPopover .vp-direct{color:var(--muted);font-size:13px;text-decoration:none;padding:2px 4px;transition:color .15s ease}
   #vidPopover .vp-direct:hover{color:var(--blue-2)}
-  #vidPopover iframe{display:block;width:100%;height:236px;border:none;background:#000}
+  #vidPopover iframe{display:block;width:100%;aspect-ratio:16/9;border:none;background:#000;border-radius:0 0 14px 14px}
   #vidPopover .vp-loading{position:absolute;bottom:50%;left:50%;transform:translate(-50%,50%);color:var(--muted);font-size:12px;pointer-events:none}
   #vidPopover .vp-fallback{display:none;padding:16px;text-align:center;font-size:13px;color:var(--muted)}
   #vidPopover .vp-fallback.show{display:block}
-  @media(max-width:500px){#vidPopover{width:94vw} #vidPopover iframe{height:200px}}
+  @media(max-width:500px){#vidPopover{width:94vw}}
 
   @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  .dia{border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden;animation:slideIn .25s ease-out}
+  .dia{border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden;animation:slideIn .25s ease-out;transition:box-shadow .2s ease}
+  .dia.dragging{opacity:.5;box-shadow:0 0 0 2px var(--blue)}
+  .dia.drag-over{box-shadow:0 -3px 0 0 var(--blue)}
+  .dia-h{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--surface-2);cursor:pointer;user-select:none;transition:background .15s ease}
+  .dia-h:hover{background:rgba(30,38,50,.9)}
+  .dia-h .arrow{transition:transform .3s cubic-bezier(.22,.61,.36,1);color:var(--blue-3);font-size:.9rem;flex:none}
+  .dia-h.open .arrow{transform:rotate(90deg)}
+  .dia-body{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.22,.61,.36,1)}
+  .dia-body.open{max-height:none;overflow:visible}
+  .dia-body-inner{padding:10px 12px 12px}
+  .drag-handle{cursor:grab;color:var(--muted);font-size:14px;padding:2px 4px;flex:none}
+  .drag-handle:active{cursor:grabbing}
+
+  .sec-body{max-height:0;overflow:hidden;transition:max-height .3s cubic-bezier(.22,.61,.36,1)}
+  .sec-body.open{max-height:none;overflow:visible}
   .dia-h{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--surface-2)}
   .dia-prefix{font-weight:700;color:var(--blue-3);white-space:nowrap}
   .dia-h .field{flex:1;font-weight:700}
@@ -356,6 +370,7 @@ const store = {
   set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 };
 let sb=null, EJERCICIOS=[], ALUMNOS=[], activeSec=null, combineTarget=null, editId=null, RUTINAS_ALUMNO=[];
+let openDayIdx=0; // which day is expanded (null = all closed)
 let lastSavedSnapshot='';
 function currentSnapshot(){ return JSON.stringify({plan,apodo:val('apodo'),pass:val('rutinaPass')}); }
 function markSaved(){ lastSavedSnapshot=currentSnapshot(); }
@@ -416,7 +431,7 @@ async function loadEjercicios(){
   EJERCICIOS=data||[];
   document.getElementById('catCount').textContent='('+EJERCICIOS.length+')';
   const groups=[...new Set(EJERCICIOS.map(e=>e.grupo))];
-  document.getElementById('groupFilter').innerHTML='<option value="">Todos los grupos</option>'+
+  document.getElementById('groupFilter').innerHTML='<option value="">Todos</option>'+
     groups.map(g=>`<option value="${g}">${GRUPOS_LABEL[g]||g}</option>`).join('');
   renderCatalog();
 }
@@ -538,7 +553,7 @@ document.getElementById('manageExBtn').onclick=()=>openExModal(null);
 /* ---------- botón Inicio: reinicia el armador ---------- */
 function doFullReset(){
   selAlumno=null; editId=null; CURRENT_ALUMNO_ID=null; RUTINAS_ALUMNO=[];
-  activeSec=null; combineTarget=null;
+  activeSec=null; combineTarget=null; openDayIdx=0;
   aInput().value=''; document.getElementById('rutinaPass').value=''; document.getElementById('apodo').value='';
   document.getElementById('naNombre').value=''; document.getElementById('naCarpeta').value='';
   document.getElementById('nuevoAlumnoBox').classList.remove('open');
@@ -805,6 +820,7 @@ function loadRutinaForEdit(r){
   document.getElementById('apodo').value=(base===currentAlumnoNombre())?'':base;
   plan=(r.plan&&r.plan.dias)?normalizePlan(JSON.parse(JSON.stringify(r.plan))):{dias:[]};
   if(plan.dias.length===0) plan.dias.push(blankDia());
+  openDayIdx=null;activeSec=null;combineTarget=null;
   renderDias(); updateNamePreview(); renderSavedList(); markSaved();
   toast('Rutina cargada para editar.','ok'); window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -816,6 +832,7 @@ function duplicarRutina(r){
   document.getElementById('apodo').value=(base===currentAlumnoNombre())?'':base;
   plan=(r.plan&&r.plan.dias)?normalizePlan(JSON.parse(JSON.stringify(r.plan))):{dias:[]};
   if(plan.dias.length===0) plan.dias.push(blankDia());
+  openDayIdx=null;activeSec=null;combineTarget=null;
   renderDias(); updateNamePreview(); renderSavedList();
   toast('Rutina duplicada. Cambiá alumno/nombre/contraseña y guardá como nueva.','ok');
   window.scrollTo({top:0,behavior:'smooth'});
@@ -869,10 +886,10 @@ async function delRutina(id,alumnoId){
 }
 
 /* ---------- editor de plan ---------- */
-function blankDia(){return {musculo:'', secciones:[blankSec('Entrenamiento de Fuerza')]};}
-function blankSec(nombre){return {nombre:nombre||SECCIONES[1], infoHIIT:'', items:[]};}
+function blankDia(){return {musculo:'', secciones:[blankSec('Acondicionamiento & Calentamiento')]};}
+function blankSec(nombre){return {nombre:nombre||SECCIONES[0], infoHIIT:'', items:[]};}
 document.getElementById('addDia').onclick=()=>addDia();
-function addDia(){plan.dias.push(blankDia());renderDias();}
+function addDia(){plan.dias.push(blankDia());openDayIdx=plan.dias.length-1;renderDias();}
 
 function sortSecciones(dia){ dia.secciones.sort((a,b)=>(SEC_ORDER[a.nombre]??9)-(SEC_ORDER[b.nombre]??9)); }
 
@@ -882,131 +899,183 @@ function renderDias(){
   wrap.innerHTML='';
   plan.dias.forEach((dia,di)=>{
     sortSecciones(dia);
+    const isDayOpen=openDayIdx===di;
     const d=document.createElement('div');d.className='dia';
-    d.innerHTML=`<div class="dia-h">
+    d.draggable=true;d.dataset.di=di;
+
+    // day header (collapsible + drag)
+    d.innerHTML=`<div class="dia-h${isDayOpen?' open':''}">
+      <span class="drag-handle" title="Arrastrar para reordenar">⠿</span>
+      <span class="arrow">▶</span>
       <span class="dia-prefix">Día ${di+1} -</span>
-      <input class="field" placeholder="Piernas / Superior / Pecho + Tríceps…" value="${escapeAttr(dia.musculo||'')}">
-      <button class="btn ghost sm" data-addsec>+ Sección</button>
-      <button class="x" data-deldia title="Borrar día">🗑</button>
-    </div>`;
+      <input class="field" placeholder="Piernas / Superior / Pecho + Tríceps…" value="${escapeAttr(dia.musculo||'')}" onclick="event.stopPropagation()">
+      <button class="btn ghost sm" data-addsec onclick="event.stopPropagation()">+ Sección</button>
+      <button class="x" data-deldia title="Borrar día" onclick="event.stopPropagation()">🗑</button>
+    </div>
+    <div class="dia-body${isDayOpen?' open':''}"><div class="dia-body-inner"></div></div>`;
+
+    // day header click = toggle
+    d.querySelector('.dia-h').onclick=()=>{
+      openDayIdx=(openDayIdx===di)?null:di;
+      renderDias();
+    };
     d.querySelector('.dia-h .field').oninput=e=>dia.musculo=e.target.value;
     d.querySelector('[data-addsec]').onclick=()=>{
       const usados=dia.secciones.map(s=>s.nombre);
-      const libre=SECCIONES.find(s=>!usados.includes(s))||SECCIONES[1];
-      dia.secciones.push(blankSec(libre));renderDias();
+      const libre=SECCIONES.find(s=>!usados.includes(s))||SECCIONES[0];
+      dia.secciones.push(blankSec(libre));
+      openDayIdx=di;
+      renderDias();
     };
-    d.querySelector('[data-deldia]').onclick=()=>{plan.dias.splice(di,1);activeSec=null;combineTarget=null;renderDias();};
+    d.querySelector('[data-deldia]').onclick=()=>{
+      plan.dias.splice(di,1);activeSec=null;combineTarget=null;
+      if(openDayIdx===di)openDayIdx=null;
+      else if(openDayIdx!==null&&openDayIdx>di)openDayIdx--;
+      renderDias();
+    };
 
-    dia.secciones.forEach((sec,si)=>{
-      const isActive=activeSec&&activeSec.di===di&&activeSec.si===si;
-      const secColor=/acondicionamiento|calentamiento/i.test(sec.nombre)?'sec-green':/fuerza/i.test(sec.nombre)?'sec-red':/hiit/i.test(sec.nombre)?'sec-yellow':'';
-      const s=document.createElement('div');s.className='sec '+(isActive?'active ':'')+secColor;
-      const opts=SECCIONES.map(n=>`<option value="${escapeAttr(n)}" ${sec.nombre===n?'selected':''}>${escapeHtml(n)}</option>`).join('');
-      s.innerHTML=`<div class="sec-h">
-        <select class="field" data-secname>${opts}</select>
-        <button class="btn ${isActive?'active':'ghost'} sm" data-pick>${isActive?'● Activa':'Elegir aquí'}</button>
-        <button class="x" data-delsec title="Borrar sección">🗑</button>
-      </div>`;
-      s.querySelector('[data-secname]').onchange=e=>{sec.nombre=e.target.value;renderDias();};
-      s.querySelector('[data-pick]').onclick=()=>{
-        if(activeSec&&activeSec.di===di&&activeSec.si===si){activeSec=null;}
-        else{activeSec={di,si};}
-        combineTarget=null;renderDias();
-      };
-      s.querySelector('[data-delsec]').onclick=()=>{dia.secciones.splice(si,1);activeSec=null;combineTarget=null;renderDias();};
-
-      const itemsBox=document.createElement('div');
-      if(!sec.items.length){itemsBox.innerHTML='<p class="empty">Marcá esta sección como activa y agregá ejercicios desde el catálogo →</p>';}
-      sec.items.forEach((item,ii)=>{
-        const it=document.createElement('div');it.className='item'+(item.tipo==='superset'?' superset':'');
-        const combining=combineTarget&&combineTarget.di===di&&combineTarget.si===si&&combineTarget.ii===ii;
-        let exHtml='';
-        item.ejercicios.forEach((ex,xi)=>{
-          exHtml+=`<div class="exrow">
-            <span class="nm">${escapeHtml(ex.nombre)}</span>
-            <input class="field" placeholder="series" value="${escapeAttr(ex.series||'')}" data-f="series" data-xi="${xi}">
-            <input class="field" placeholder="reps (ej: 12 10 8)" value="${escapeAttr(ex.reps||'')}" data-f="reps" data-xi="${xi}">
-            <button class="note-toggle${ex.nota?' has':''}" data-notetoggle="${xi}" title="Agregar nota">+</button>
-            <button class="x" data-rmex="${xi}" title="Quitar">✕</button>
-          </div>
-          <div class="ex-note ${ex.nota?'show':''}" data-notebox="${xi}"><input class="field" placeholder="Nota breve para el alumno…" value="${escapeAttr(ex.nota||'')}" data-f="nota" data-xi="${xi}" style="font-size:12px"></div>`;
-        });
-        const tag=item.tipo==='superset'?'🔗 Superset ('+item.ejercicios.length+' ejercicios)':'Ejercicio';
-        it.innerHTML=`<div class="item-tag">${tag}
-            <button class="btn ${combining?'active':'ghost'} sm" data-combine>${combining?'● combinando…':'+ combinar (superset)'}</button></div>
-          ${exHtml}
-          <div class="item-foot"><span class="muted" style="font-size:12px">Descanso:</span>
-            <input class="field rest" placeholder="1-2min" value="${escapeAttr(item.descanso||'')}" data-rest>
-            <span class="sp" style="flex:1"></span>
-            <button class="x" data-rmitem title="Quitar bloque">🗑</button></div>`;
-        it.querySelectorAll('[data-f]').forEach(inp=>inp.oninput=e=>{item.ejercicios[+inp.dataset.xi][inp.dataset.f]=e.target.value;});
-        let _noteClosing=false;
-        it.querySelectorAll('[data-notetoggle]').forEach(b=>{
-          b.addEventListener('mousedown', e=>{ e.preventDefault(); _noteClosing=true; }); // prevent blur race
-          b.onclick=()=>{
-            _noteClosing=false;
-            const xi=+b.dataset.notetoggle, box=it.querySelector(`[data-notebox="${xi}"]`);
-            if(box.classList.contains('show')){
-              // close it
-              const v=box.querySelector('input').value.trim();
-              box.classList.remove('show','pulse');
-              if(!v){ item.ejercicios[xi].nota=''; b.classList.remove('has'); }
-              else { b.classList.add('has'); box.classList.add('pulse'); }
-            } else {
-              box.classList.add('show'); box.querySelector('input').focus();
-            }
-          };
-        });
-        it.querySelectorAll('.ex-note input').forEach(inp=>{
-          const xi=+inp.dataset.xi;
-          function confirmNote(){
-            if(_noteClosing){ _noteClosing=false; return; } // skip, the click handler will handle it
-            const v=inp.value.trim();
-            const btn=it.querySelector(`[data-notetoggle="${xi}"]`);
-            const box=it.querySelector(`[data-notebox="${xi}"]`);
-            if(!v){
-              box.classList.remove('show','pulse');
-              item.ejercicios[xi].nota='';
-              btn.classList.remove('has');
-            } else {
-              btn.classList.add('has');
-              box.classList.remove('pulse');
-              void box.offsetWidth;
-              box.classList.add('pulse');
-            }
-          }
-          inp.addEventListener('blur', confirmNote);
-          inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); inp.blur(); } });
-        });
-        it.querySelectorAll('[data-rmex]').forEach(b=>b.onclick=()=>{
-          item.ejercicios.splice(+b.dataset.rmex,1);
-          if(item.ejercicios.length<=1)item.tipo='simple';
-          if(item.ejercicios.length===0)sec.items.splice(ii,1);
-          renderDias();
-        });
-        it.querySelector('[data-rest]').oninput=e=>item.descanso=e.target.value;
-        it.querySelector('[data-combine]').onclick=()=>{
-          if(combining){combineTarget=null; if(item.ejercicios.length<=1)item.tipo='simple';} // segundo clic: cierra la superset
-          else{activeSec={di,si};combineTarget={di,si,ii};item.tipo='superset';}
-          renderDias();
-        };
-        it.querySelector('[data-rmitem]').onclick=()=>{
-          if(combineTarget&&combineTarget.di===di&&combineTarget.si===si&&combineTarget.ii===ii)combineTarget=null;
-          sec.items.splice(ii,1);renderDias();
-        };
-        itemsBox.appendChild(it);
-      });
-      s.appendChild(itemsBox);
-
-      if(sec.nombre==='Entrenamiento HIIT'){
-        const info=document.createElement('div');info.className='hiit-info';
-        info.innerHTML=`<label style="margin-top:4px">Más información de HIIT (la ve el alumno)</label>
-          <textarea class="field" rows="3" placeholder="Explicá acá el HIIT de este día…">${escapeHtml(sec.infoHIIT||'')}</textarea>`;
-        info.querySelector('textarea').oninput=e=>sec.infoHIIT=e.target.value;
-        s.appendChild(info);
+    // drag events
+    d.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',di);d.classList.add('dragging');});
+    d.addEventListener('dragend',()=>d.classList.remove('dragging'));
+    d.addEventListener('dragover',e=>{e.preventDefault();d.classList.add('drag-over');});
+    d.addEventListener('dragleave',()=>d.classList.remove('drag-over'));
+    d.addEventListener('drop',e=>{
+      e.preventDefault();d.classList.remove('drag-over');
+      const fromIdx=+e.dataTransfer.getData('text/plain');
+      const toIdx=di;
+      if(fromIdx===toIdx)return;
+      const moved=plan.dias.splice(fromIdx,1)[0];
+      plan.dias.splice(toIdx,0,moved);
+      // update openDayIdx
+      if(openDayIdx===fromIdx)openDayIdx=toIdx;
+      else if(openDayIdx!==null){
+        if(fromIdx<openDayIdx&&toIdx>=openDayIdx)openDayIdx--;
+        else if(fromIdx>openDayIdx&&toIdx<=openDayIdx)openDayIdx++;
       }
-      d.appendChild(s);
+      // update activeSec
+      if(activeSec){
+        if(activeSec.di===fromIdx)activeSec.di=toIdx;
+        else{
+          if(fromIdx<activeSec.di&&toIdx>=activeSec.di)activeSec.di--;
+          else if(fromIdx>activeSec.di&&toIdx<=activeSec.di)activeSec.di++;
+        }
+      }
+      renderDias();
     });
+
+    // sections (only render if day is open)
+    if(isDayOpen){
+      const bodyInner=d.querySelector('.dia-body-inner');
+      dia.secciones.forEach((sec,si)=>{
+        const isActive=activeSec&&activeSec.di===di&&activeSec.si===si;
+        const secColor=/acondicionamiento|calentamiento/i.test(sec.nombre)?'sec-green':/fuerza/i.test(sec.nombre)?'sec-red':/hiit/i.test(sec.nombre)?'sec-yellow':'';
+        const s=document.createElement('div');s.className='sec '+(isActive?'active ':'')+secColor;
+        const opts=SECCIONES.map(n=>`<option value="${escapeAttr(n)}" ${sec.nombre===n?'selected':''}>${escapeHtml(n)}</option>`).join('');
+
+        // section header
+        s.innerHTML=`<div class="sec-h">
+          <select class="field" data-secname onclick="event.stopPropagation()">${opts}</select>
+          <button class="btn ${isActive?'active':'ghost'} sm" data-pick>${isActive?'● Activa':'Elegir aquí'}</button>
+          <button class="x" data-delsec title="Borrar sección">🗑</button>
+        </div>
+        <div class="sec-body${isActive?' open':''}"></div>`;
+
+        s.querySelector('[data-secname]').onchange=e=>{sec.nombre=e.target.value;renderDias();};
+        s.querySelector('[data-pick]').onclick=()=>{
+          if(activeSec&&activeSec.di===di&&activeSec.si===si){activeSec=null;}
+          else{activeSec={di,si};openDayIdx=di;}
+          combineTarget=null;renderDias();
+        };
+        s.querySelector('[data-delsec]').onclick=()=>{dia.secciones.splice(si,1);activeSec=null;combineTarget=null;renderDias();};
+
+        // section body content (only when active)
+        if(isActive){
+          const secBody=s.querySelector('.sec-body');
+          const itemsBox=document.createElement('div');
+          if(!sec.items.length){itemsBox.innerHTML='<p class="empty">Marcá esta sección como activa y agregá ejercicios desde el catálogo →</p>';}
+          sec.items.forEach((item,ii)=>{
+            const it=document.createElement('div');it.className='item'+(item.tipo==='superset'?' superset':'');
+            const combining=combineTarget&&combineTarget.di===di&&combineTarget.si===si&&combineTarget.ii===ii;
+            let exHtml='';
+            item.ejercicios.forEach((ex,xi)=>{
+              exHtml+=`<div class="exrow">
+                <span class="nm">${escapeHtml(ex.nombre)}</span>
+                <input class="field" placeholder="series" value="${escapeAttr(ex.series||'')}" data-f="series" data-xi="${xi}">
+                <input class="field" placeholder="reps (ej: 12 10 8)" value="${escapeAttr(ex.reps||'')}" data-f="reps" data-xi="${xi}">
+                <button class="note-toggle${ex.nota?' has':''}" data-notetoggle="${xi}" title="Agregar nota">+</button>
+                <button class="x" data-rmex="${xi}" title="Quitar">✕</button>
+              </div>
+              <div class="ex-note ${ex.nota?'show':''}" data-notebox="${xi}"><input class="field" placeholder="Nota breve para el alumno…" value="${escapeAttr(ex.nota||'')}" data-f="nota" data-xi="${xi}" style="font-size:12px"></div>`;
+            });
+            const tag=item.tipo==='superset'?'🔗 Superset ('+item.ejercicios.length+' ejercicios)':'Ejercicio';
+            it.innerHTML=`<div class="item-tag">${tag}
+                <button class="btn ${combining?'active':'ghost'} sm" data-combine>${combining?'● combinando…':'+ combinar (superset)'}</button></div>
+              ${exHtml}
+              <div class="item-foot"><span class="muted" style="font-size:12px">Descanso:</span>
+                <input class="field rest" placeholder="1-2min" value="${escapeAttr(item.descanso||'')}" data-rest>
+                <span class="sp" style="flex:1"></span>
+                <button class="x" data-rmitem title="Quitar bloque">🗑</button></div>`;
+            it.querySelectorAll('[data-f]').forEach(inp=>inp.oninput=e=>{item.ejercicios[+inp.dataset.xi][inp.dataset.f]=e.target.value;});
+            let _noteClosing=false;
+            it.querySelectorAll('[data-notetoggle]').forEach(b=>{
+              b.addEventListener('mousedown', e=>{ e.preventDefault(); _noteClosing=true; });
+              b.onclick=()=>{
+                _noteClosing=false;
+                const xi=+b.dataset.notetoggle, box=it.querySelector(`[data-notebox="${xi}"]`);
+                if(box.classList.contains('show')){
+                  const v=box.querySelector('input').value.trim();
+                  box.classList.remove('show','pulse');
+                  if(!v){ item.ejercicios[xi].nota=''; b.classList.remove('has'); }
+                  else { b.classList.add('has'); box.classList.add('pulse'); }
+                } else {
+                  box.classList.add('show'); box.querySelector('input').focus();
+                }
+              };
+            });
+            it.querySelectorAll('.ex-note input').forEach(inp=>{
+              const xi=+inp.dataset.xi;
+              function confirmNote(){
+                if(_noteClosing){ _noteClosing=false; return; }
+                const v=inp.value.trim();
+                const btn=it.querySelector(`[data-notetoggle="${xi}"]`);
+                const box=it.querySelector(`[data-notebox="${xi}"]`);
+                if(!v){ box.classList.remove('show','pulse'); item.ejercicios[xi].nota=''; btn.classList.remove('has'); }
+                else { btn.classList.add('has'); box.classList.remove('pulse'); void box.offsetWidth; box.classList.add('pulse'); }
+              }
+              inp.addEventListener('blur', confirmNote);
+              inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); inp.blur(); } });
+            });
+            it.querySelectorAll('[data-rmex]').forEach(b=>b.onclick=()=>{
+              item.ejercicios.splice(+b.dataset.rmex,1);
+              if(item.ejercicios.length<=1)item.tipo='simple';
+              if(item.ejercicios.length===0)sec.items.splice(ii,1);
+              renderDias();
+            });
+            it.querySelector('[data-rest]').oninput=e=>item.descanso=e.target.value;
+            it.querySelector('[data-combine]').onclick=()=>{
+              if(combining){combineTarget=null; if(item.ejercicios.length<=1)item.tipo='simple';}
+              else{activeSec={di,si};combineTarget={di,si,ii};item.tipo='superset';}
+              renderDias();
+            };
+            it.querySelector('[data-rmitem]').onclick=()=>{
+              if(combineTarget&&combineTarget.di===di&&combineTarget.si===si&&combineTarget.ii===ii)combineTarget=null;
+              sec.items.splice(ii,1);renderDias();
+            };
+            itemsBox.appendChild(it);
+          });
+          secBody.appendChild(itemsBox);
+
+          if(sec.nombre==='Entrenamiento HIIT'){
+            const info=document.createElement('div');info.className='hiit-info';
+            info.innerHTML=`<label style="margin-top:4px">Más información de HIIT (la ve el alumno)</label>
+              <textarea class="field" rows="3" placeholder="Explicá acá el HIIT de este día…">${escapeHtml(sec.infoHIIT||'')}</textarea>`;
+            info.querySelector('textarea').oninput=e=>sec.infoHIIT=e.target.value;
+            secBody.appendChild(info);
+          }
+        }
+        bodyInner.appendChild(s);
+      });
+    }
     wrap.appendChild(d);
   });
 }
@@ -1065,7 +1134,7 @@ async function saveRutina(){
 
 document.getElementById('newBtn').onclick=newRutina;
 function doNewRutina(){
-  editId=null;activeSec=null;combineTarget=null;
+  editId=null;activeSec=null;combineTarget=null;openDayIdx=0;
   plan={dias:[blankDia()]};
   document.getElementById('apodo').value='';
   document.getElementById('rutinaPass').value='';
